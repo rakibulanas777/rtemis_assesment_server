@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const mongoSanitize = require("express-mongo-sanitize");
 const path = require("path");
 const userRouter = require("./routes/userRoutes");
+const roomRouter = require("./routes/roomRoutes");
 const globalErrorHandler = require("./controllers/errorController");
 const AppError = require("./utils/appError");
 
@@ -58,6 +59,7 @@ app.use((req, res, next) => {
 // 3) ROUTES
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/rooms", roomRouter);
 
 app.all("*", (req, res, next) => {
   res.send("Hello world");
