@@ -7,6 +7,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const path = require("path");
 const userRouter = require("./routes/userRoutes");
 const roomRouter = require("./routes/roomRoutes");
+const bookingRouter = require("./routes/bookingRoutes");
 const globalErrorHandler = require("./controllers/errorController");
 const AppError = require("./utils/appError");
 
@@ -60,6 +61,7 @@ app.use((req, res, next) => {
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/rooms", roomRouter);
+app.use("/api/v1/booking", bookingRouter);
 
 app.all("*", (req, res, next) => {
   res.send("Hello world");
