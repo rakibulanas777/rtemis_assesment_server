@@ -23,8 +23,6 @@ exports.getCurrentUser = catchAsync(async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  console.log(token);
-
   if (!token) {
     return res.status(401).json({
       status: "fail",
@@ -42,12 +40,8 @@ exports.getCurrentUser = catchAsync(async (req, res, next) => {
     });
   }
 
-  console.log(decoded.id);
-
   // Fetch the user and populate their subscriptions
-  const currentUser = await User.findOne({ email: decoded.email }).populate(
-    "subscriptions"
-  );
+  const currentUser = await User.findOne({ email: decoded.email });
 
   if (!currentUser) {
     return res.status(404).json({

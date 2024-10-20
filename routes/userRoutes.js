@@ -17,7 +17,7 @@ const {
 } = require("../controllers/userController");
 const router = express.Router();
 
-router.post("/signup", signUp);
+router.post("/signup",  signUp);
 router.get("/current-user", getCurrentUser);
 router.post("/verify", verifyAccount);
 router.post("/resendotp", resendOTP);

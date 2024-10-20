@@ -12,13 +12,13 @@ router.get("/getRoom/:id", roomController.getRoom);
 router.post(
   "/addRoom",
   protect,
-  upload.fields([{ name: "file" }, { name: "image" }]),
+  upload.fields([{ name: "image" }]),
   roomController.createRoom
 );
 router.patch(
   "/rooms/:id",
   protect,
-  upload.fields([{ name: "file" }, { name: "image" }]),
+  upload.fields([{ name: "image" }]),
   roomController.updateRoom
 );
 router.delete("/rooms/:id", protect, roomController.deleteRoom);

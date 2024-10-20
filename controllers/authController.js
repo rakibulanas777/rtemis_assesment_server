@@ -36,18 +36,19 @@ const createSendToken = (user, statusCode, res, message) => {
 
 // SignUp function
 exports.signUp = catchAsync(async (req, res, next) => {
+  console.log(req.body);
   const { email } = req.body;
   const existingUser = await User.findOne({ email });
+
   if (existingUser) return next(new AppError("Email already registered", 400));
+
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
   const newUser = await User.create({
-    name: req.body.name,
+    name: req.body.fullName,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role,
-    photo: req.body.photo,
-    passwordChangedAt: req.body.passwordChangedAt,
     otp,
   });
 
@@ -181,11 +182,11 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      from: "Wave Lyrics",
+      from: "Homez",
       subject: "OTP for Email Verification",
       html: `
     <p>Hello,</p>
-    <p>Thank you for registering with Web Lyric. To complete your email verification, please use the following One-Time Password (OTP):</p>
+    <p>Thank you for registering with Homez. To complete your email verification, please use the following One-Time Password (OTP):</p>
     <p style="font-size: 24px; color: #007bff;"><strong>${otp}</strong></p>
     
     <p>This OTP is valid for the next 15 minutes. If you didn't request this verification, please ignore this email.</p>
@@ -214,6 +215,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
 
 // Reset Password
 exports.resetPassword = catchAsync(async (req, res, next) => {
+  
   const { email, otp, password, passwordConfirm } = req.body;
 
   const user = await User.findOne({
@@ -222,6 +224,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     resetTokenExpiration: { $gt: Date.now() },
   });
 
+  
   if (!user) return next(new AppError("No User Found!", 400));
   user.password = password;
   user.passwordConfirm = passwordConfirm;
