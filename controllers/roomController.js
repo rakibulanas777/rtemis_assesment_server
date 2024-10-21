@@ -3,7 +3,7 @@ const catchAsync = require("../utils/catchAsync");
 
 // Get all rooms (no role restriction)
 exports.getAllRooms = catchAsync(async (req, res, next) => {
-  const rooms = await Room.find();
+  const rooms = await Room.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     status: "success",
@@ -37,9 +37,8 @@ exports.getRoom = catchAsync(async (req, res, next) => {
 });
 
 exports.createRoom = catchAsync(async (req, res, next) => {
-  const { title, rent, facilities } = req.body; // Fixed spelling for facilities
-
-  // Check for required fields
+  const { title, rent, facilities, details, location } = req.body; // Fixed spelling for facilities
+  console.log(req.body);
   if (!title || !rent || !facilities) {
     return res.status(400).json({
       status: "fail",
@@ -47,6 +46,7 @@ exports.createRoom = catchAsync(async (req, res, next) => {
     });
   }
 
+  console.log(facilities[0]);
   const imageFile = req?.files["image"] ? req.files["image"][0] : null;
   if (!imageFile) {
     return res.status(400).json({
@@ -54,13 +54,15 @@ exports.createRoom = catchAsync(async (req, res, next) => {
       message: "Image file is required.",
     });
   }
-
+  console.log(imageFile);
   try {
     const newRoom = await Room.create({
       title,
       rent,
-      facilities,
-      picture: `http://localhost:3000/${imageFile?.originalname} || null`,
+      facilities: facilities[0],
+      details,
+      location,
+      picture: `https://rtemis-assesment-server-2.onrender.com/${imageFile?.originalname}`,
     });
 
     return res.status(201).json({
@@ -83,17 +85,43 @@ exports.createRoom = catchAsync(async (req, res, next) => {
 // Update room by ID (only admin can update)
 exports.updateRoom = catchAsync(async (req, res, next) => {
   const roomId = req.params.id;
-  const updatedRoom = await Room.findByIdAndUpdate(roomId, req.body, {
-    new: true,
-    runValidators: true,
-  });
 
-  if (!updatedRoom) {
+  // Destructure the fields from the request body
+  const { title, rent, facilities, details, location } = req.body;
+
+  // Input validation
+  if (!title || !rent || !facilities) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Title, rent, and facilities are required.",
+    });
+  }
+
+  // Check for existing room
+  const existingRoom = await Room.findById(roomId);
+  if (!existingRoom) {
     return res.status(404).json({
       status: "fail",
       message: "No room found with that ID",
     });
   }
+
+  // Handle image upload if provided
+  const imageFile = req?.files["image"] ? req.files["image"][0] : null;
+  if (imageFile) {
+    // Update the room picture URL if a new image is uploaded
+    existingRoom.picture = `https://rtemis-assesment-server-2.onrender.com/${imageFile?.originalname}`;
+  }
+
+  // Update room details
+  existingRoom.title = title;
+  existingRoom.rent = rent;
+  existingRoom.facilities = facilities; // Store all facilities if required
+  existingRoom.details = details;
+  existingRoom.location = location;
+
+  // Save updated room
+  const updatedRoom = await existingRoom.save();
 
   res.status(200).json({
     status: "success",

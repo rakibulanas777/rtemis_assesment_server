@@ -23,6 +23,14 @@ const roomSchema = new mongoose.Schema({
     type: String,
     required: [true, "A room must have a picture"],
   },
+  details: {
+    type: String,
+    required: [true, "A room must have a picture"],
+  },
+  location: {
+    type: String,
+    required: [true, "A room must have a picture"],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

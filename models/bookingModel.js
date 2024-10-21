@@ -38,6 +38,7 @@ bookingSchema.statics.checkDateConflict = async function (
 ) {
   const bookings = await this.find({
     room: roomId,
+    status: { $ne: "cancelled" },
     $or: [
       { startDate: { $lt: endDate, $gt: startDate } },
       { endDate: { $gt: startDate, $lt: endDate } },
@@ -48,7 +49,7 @@ bookingSchema.statics.checkDateConflict = async function (
     ],
   });
 
-  return bookings.length > 0; // Returns true if there's a conflict
+  return bookings.length > 0;
 };
 
 // Create and export the Booking model

@@ -16,11 +16,11 @@ router.post(
   roomController.createRoom
 );
 router.patch(
-  "/rooms/:id",
+  "/editrooms/:id",
   protect,
   upload.fields([{ name: "image" }]),
   roomController.updateRoom
 );
-router.delete("/rooms/:id", protect, roomController.deleteRoom);
+router.delete("/deleterooms/:id", protect, roomController.deleteRoom);
 
 module.exports = router;

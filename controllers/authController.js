@@ -215,7 +215,6 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
 
 // Reset Password
 exports.resetPassword = catchAsync(async (req, res, next) => {
-  
   const { email, otp, password, passwordConfirm } = req.body;
 
   const user = await User.findOne({
@@ -224,7 +223,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     resetTokenExpiration: { $gt: Date.now() },
   });
 
-  
   if (!user) return next(new AppError("No User Found!", 400));
   user.password = password;
   user.passwordConfirm = passwordConfirm;
@@ -308,6 +306,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     const token = req.headers["authorization"].split(" ")[1];
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decode) => {
+      console.log(err);
       if (err) {
         return res.status(200).send({
           message: "Auth failed",

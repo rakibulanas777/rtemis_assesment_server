@@ -6,6 +6,7 @@ const {
   cancelBooking,
   getUserBookings,
   approveBooking,
+  getAllBookings,
 } = require("../controllers/bookingController");
 const { protect } = require("../controllers/authController");
 
@@ -21,5 +22,6 @@ router.patch("/:bookingId/cancel", protect, cancelBooking);
 router.patch("/:bookingId/approve", protect, approveBooking);
 
 router.get("/user/:userId", getUserBookings);
+router.get("/all-booking", protect, getAllBookings);
 
 module.exports = router;
