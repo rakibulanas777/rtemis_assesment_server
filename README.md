@@ -16,7 +16,7 @@ Install with npm
 
 ## Authors
 
-- [@octokatherine](https://www.github.com/rakibulanas777)
+- [@rakibulanas777](https://www.github.com/rakibulanas777)
 
 ## Adin Longin
 
