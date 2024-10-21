@@ -11,43 +11,56 @@ const bookingRouter = require("./routes/bookingRoutes");
 const globalErrorHandler = require("./controllers/errorController");
 const AppError = require("./utils/appError");
 
+// Add http and socket.io
+const http = require("http");
+const { Server } = require("socket.io");
 const app = express();
+const server = http.createServer(app); // Create server instance
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+// Attach the `io` instance to the request object in middleware
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+app.set("io", io);
+// Socket.IO connection
+io.on("connection", (socket) => {
+  console.log("A user connected", socket.id);
+
+  socket.on("register", (userId) => {
+    socket.join(userId);
+    console.log(`User with ID: ${userId} joined room: ${userId}`);
+  });
+
+  socket.on("bookingStatusChanged", (data) => {
+    console.log("Booking status update:", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected", socket.id);
+  });
+});
 
 app.use("/", express.static("uploads"));
-// 1) GLOBAL MIDDLEWARES
-// Set security HTTP headers
-app.use(cookieParser());
 
-// Set security HTTP headers
+// 1) GLOBAL MIDDLEWARES
+app.use(cookieParser());
 app.use(helmet());
 app.use(cors());
 
-// Development logging
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// Limit requests from the same API
-// const limiter = rateLimit({
-//   validate: {
-//     validationsConfig: false,
-//     // ...
-//     default: true,
-//   },
-//   // ...
-//   max: 10000,
-//   windowMs: 60 * 60 * 1000,
-//   message: "Too many requests from this IP, please try again in an hour!",
-// });
-// app.use("/api", limiter);
-
-// Body parser, reading data from the body into req.body
 app.use(express.json({ limit: "10kb" }));
-
-// Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
-// Serving static files
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -58,7 +71,6 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/booking", bookingRouter);
@@ -68,10 +80,8 @@ app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// app.all("/", (res, req) => {
-//   res.send("Hello world");
-// });
-
+// Global error handler
 app.use(globalErrorHandler);
 
-module.exports = app;
+// Export the `server` instead of `app` so you can run the Socket.IO server
+module.exports = server;

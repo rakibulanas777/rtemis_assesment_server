@@ -15,7 +15,7 @@ exports.createBooking = catchAsync(async (req, res, next) => {
   const currentDate = new Date();
 
   // Check if the booking is for a past date
-  if (new Date(startDate) < currentDate) {
+  if (new Date(startDate) <= currentDate) {
     return res.status(400).json({
       status: "fail",
       message: "Cannot book a room for past dates.",
@@ -96,58 +96,91 @@ exports.modifyBooking = catchAsync(async (req, res, next) => {
   res.status(200).send({ message: "Booking updated successfully", booking });
 });
 
+// In your bookingController.js
+
 exports.approveBooking = catchAsync(async (req, res, next) => {
   const { bookingId } = req.params;
 
-  const booking = await Booking.findById({ _id: bookingId });
-  if (!booking) {
-    return res
-      .status(404)
-      .send({ success: false, message: "Booking not found." });
+  try {
+    const booking = await Booking.findById({ _id: bookingId });
+    if (!booking) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Booking not found." });
+    }
+
+    if (booking.status === "approved") {
+      return res
+        .status(400)
+        .send({ success: false, message: "Booking is already approved." });
+    }
+
+    // Approve the booking
+    booking.status = "approved";
+    await booking.save();
+
+    req.io.to(booking.user).emit("bookingStatusChanged", {
+      message: "Your booking has been approved!",
+      bookingId: booking._id,
+    });
+
+    // Respond to the client
+    res.status(200).send({
+      success: true,
+      message: "Booking approved successfully!",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error approving booking:", error);
+    res.status(500).send({
+      success: false,
+      message:
+        "An error occurred while approving the booking. Please try again later.",
+    });
   }
-
-  if (booking.approved) {
-    return res
-      .status(400)
-      .send({ success: false, message: "Booking is already approved." });
-  }
-
-  // Approve the booking
-
-  booking.status = "approved";
-  await booking.save();
-
-  res.status(200).send({
-    success: true, // Success flag
-    message: "Booking approved successfully!", // Success message
-    booking,
-  });
 });
 
 exports.cancelBooking = catchAsync(async (req, res, next) => {
   const { bookingId } = req.params;
 
-  const booking = await Booking.findById({ _id: bookingId });
-  if (!booking) {
-    return res
-      .status(404)
-      .send({ success: false, message: "Booking not found." });
+  try {
+    const booking = await Booking.findById({ _id: bookingId });
+    if (!booking) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Booking not found." });
+    }
+
+    if (booking.status === "cancelled") {
+      return res
+        .status(400)
+        .send({ success: false, message: "Booking is already cancelled." });
+    }
+
+    // Cancel the booking
+    booking.status = "cancelled";
+    await booking.save();
+
+    // Emit notification to the user
+    req.io.to(booking.user).emit("bookingStatusChanged", {
+      message: "Your booking has been cancelled.",
+      bookingId: booking._id,
+    });
+
+    // Respond to the client
+    res.status(200).send({
+      success: true,
+      message: "Booking cancelled successfully!",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    res.status(500).send({
+      success: false,
+      message:
+        "An error occurred while cancelling the booking. Please try again later.",
+    });
   }
-
-  if (booking.status === "cancelled") {
-    return res
-      .status(400)
-      .send({ success: false, message: "Booking is already cancelled." });
-  }
-
-  booking.status = "cancelled";
-  await booking.save();
-
-  res.status(200).send({
-    success: true,
-    message: "Booking cancelled successfully!",
-    booking,
-  });
 });
 
 exports.getUserBookings = catchAsync(async (req, res, next) => {
